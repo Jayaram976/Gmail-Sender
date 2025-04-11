@@ -8,9 +8,7 @@ from email.mime.application import MIMEApplication
 
 app = Flask(__name__)
 
-@app.route('/')
-def home():
-     return render_template('index.html')
+
 
 # Email configuration
 SMTP_SERVER = "smtp.gmail.com"
@@ -73,6 +71,11 @@ def send_email(to_email, subject, body, attachment_path=None):
         server.starttls()
         server.login(EMAIL_SENDER, EMAIL_PASSWORD)
         server.sendmail(EMAIL_SENDER, to_email, msg.as_string())
+
+
+@app.route('/')
+def home():
+     return render_template('index.html')
 
 @app.route("/", methods=["GET", "POST"])
 def index():
