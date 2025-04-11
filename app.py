@@ -8,6 +8,10 @@ from email.mime.application import MIMEApplication
 
 app = Flask(__name__)
 
+@app.route('/')
+def home():
+     return render_template('index.html')
+
 # Email configuration
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
