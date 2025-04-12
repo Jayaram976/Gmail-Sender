@@ -5,8 +5,14 @@ import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
+from get_templates import get_templates_bp
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
+
+# Register your blueprint
+app.register_blueprint(get_templates_bp)
 
 
 
