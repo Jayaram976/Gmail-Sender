@@ -1,0 +1,70 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Send Email</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f0f0;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            width: 400px;
+        }
+        select, button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 16px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Send Interview Invitation Email</h2>
+    <label>Email Template:</label>
+    <select id="template-dropdown"></select>
+    <button onclick="sendEmail()">Send Emails with PDF</button>
+</div>
+
+<script>
+    async function fetchTemplates() {
+        const response = await fetch("/get_templates");
+        const data = await response.json();
+        const dropdown = document.getElementById("template-dropdown");
+        data.forEach(t => {
+            const option = document.createElement("option");
+            option.value = t;
+            option.text = t;
+            dropdown.appendChild(option);
+        });
+    }
+
+    function sendEmail() {
+        alert("Sending email with template: " + document.getElementById("template-dropdown").value);
+        // Add your fetch POST logic here
+    }
+
+    fetchTemplates();
+</script>
+</body>
+</html>
