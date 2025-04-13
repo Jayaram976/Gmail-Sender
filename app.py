@@ -5,102 +5,60 @@ import os
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.application import MIMEApplication
-from get_templates import get_templates_bp
+from werkzeug.utils import secure_filename
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
+app.config['UPLOAD_FOLDER'] = 'uploads'
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# Register your blueprint
-app.register_blueprint(get_templates_bp)
-
-
-
-# Email configuration
+# Email credentials
 SMTP_SERVER = "smtp.gmail.com"
 SMTP_PORT = 587
 EMAIL_SENDER = "jayaramkr1997@gmail.com"
 EMAIL_PASSWORD = "egiw litl deao aomm"  # Use App Password
 
-# Email template
-EMAIL_TEMPLATES = {
-    "interview_invite": """Subject: Interview Invitation from NovaTech Solutions
-
-Dear {name},
-
-Thank you for applying to the position of Junior Software Engineer at NovaTech Solutions. We are pleased to inform you that you have been shortlisted for the next round of our recruitment process.
-
-We would like to schedule an interview with you to better understand your experience and skills.
-
-Here are the proposed interview details:
-
-🗓️ Date: April 8, 2025  
-⏰ Time: 11:00 AM IST  
-📍 Mode: Google Meet  
-📌 Duration: 30–45 minutes  
-
-Please confirm your availability by replying to this email by April 7, 2025, 5:00 PM IST.
-
-We look forward to speaking with you!
-
-Warm regards,  
-Nikhil Arora  
-HR Executive  
-NovaTech Solutions  
-hr@novatechsolutions.in  
-+91-98400-XXXX"""
-}
-
-# Load contacts
-def load_contacts():
-    return pd.read_csv("contacts.csv")  # Assumes 'name' and 'email' columns
-
-# Send email with PDF attachment
+# Email sender function
 def send_email(to_email, subject, body, attachment_path=None):
     msg = MIMEMultipart()
     msg["Subject"] = subject
     msg["From"] = EMAIL_SENDER
     msg["To"] = to_email
 
-    # Body
     msg.attach(MIMEText(body, "plain"))
 
-    # PDF Attachment
     if attachment_path and os.path.exists(attachment_path):
         with open(attachment_path, "rb") as f:
             part = MIMEApplication(f.read(), Name=os.path.basename(attachment_path))
         part['Content-Disposition'] = f'attachment; filename="{os.path.basename(attachment_path)}"'
         msg.attach(part)
 
-    # Send
     with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
         server.starttls()
         server.login(EMAIL_SENDER, EMAIL_PASSWORD)
         server.sendmail(EMAIL_SENDER, to_email, msg.as_string())
 
-
-@app.route('/')
-def home():
-     return render_template('index.html')
-
-@app.route("/", methods=["GET", "POST"])
+@app.route('/', methods=["GET", "POST"])
 def index():
     if request.method == "POST":
-        selected_template = request.form["style"]
-        subject = "Interview Invitation from NovaTech Solutions"
-        attachment = "Offer_Letter.pdf"  # PDF file in the root directory
+        subject = request.form["subject"]
+        message_template = request.form["message"]
+        file = request.files["csv_file"]
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
 
-        contacts = load_contacts()
-        for _, row in contacts.iterrows():
+        df = pd.read_csv(filepath)
+        for _, row in df.iterrows():
             name = row["name"]
             email = row["email"]
-            template = EMAIL_TEMPLATES[selected_template]
-            message = template.replace("{name}", name)
-            send_email(email, subject, message, attachment_path=attachment)
+            message = message_template.replace("{name}", name)
+            send_email(email, subject, message, attachment_path="Offer_Letter.pdf")
 
-        return "✅ Interview emails with PDF sent successfully!"
+        return "✅ Emails sent successfully!"
 
-    return render_template("index.html", styles=EMAIL_TEMPLATES.keys())
+    return render_template("index.html")
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
